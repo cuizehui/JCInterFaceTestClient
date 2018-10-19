@@ -1,9 +1,13 @@
 package com.juphoon.JCTestDemo.JCWrapper;
 
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCTestEvent;
 import com.juphoon.cloud.JCCallItem;
+import com.juphoon.cloud.JCMediaChannel;
+import com.juphoon.cloud.JCMediaChannelParticipant;
 
 import org.greenrobot.eventbus.EventBus;
 import org.json.JSONException;
@@ -45,12 +49,19 @@ public class JCCallbackProxy implements JCCallbackProxyMethod {
             resultJson.put("type", "callback");
             resultJson.put("method", method);
             Gson gson = new Gson();
-            for (int i = 0; i < args.length; i++) {
-                if (args[i].getClass() == com.juphoon.cloud.JCCallItem.class) {
-                    JCCallItem jcCallItem = (JCCallItem) args[i];
-                    resultJson.put("arg" + i, gson.toJson(jcCallItem));
-                } else {
-                    resultJson.put("arg" + i, args[i]);
+            if (args != null) {
+                for (int i = 0; i < args.length; i++) {
+                    Log.d("class type:", args[i].getClass().toString() + ".");
+                    if (args[i].getClass() == com.juphoon.cloud.JCCallItem.class) {
+                        JCCallItem jcCallItem = (JCCallItem) args[i];
+                        resultJson.put("arg" + i, gson.toJson(jcCallItem));
+                    }
+                    if (args[i].getClass() == JCMediaChannelParticipant.class) {
+                        JCMediaChannelParticipant jcMediaChannelParticipant = (JCMediaChannelParticipant) args[i];
+                        resultJson.put("arg" + i, gson.toJson(jcMediaChannelParticipant));
+                    } else {
+                        resultJson.put("arg" + i, args[i]);
+                    }
                 }
             }
         } catch (JSONException e) {

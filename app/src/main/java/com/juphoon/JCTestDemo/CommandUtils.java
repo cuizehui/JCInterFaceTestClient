@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class CommandUtils {
 
@@ -74,16 +75,32 @@ public class CommandUtils {
             pramsType = Boolean.class;
         } else if (TextUtils.equals("callitem", key)) {
             pramsType = com.juphoon.cloud.JCCallItem.class;
+        } else if (TextUtils.equals("map", key)) {
+            pramsType = Map.class;
         }
         return pramsType;
     }
 
     //处理特殊类型对象
-    public Object translateParam(Class<?> type, Object value) {
+    public Object translateParam(Class<?> type, Object value) throws JSONException {
         if (type == com.juphoon.cloud.JCCallItem.class) {
             List<JCCallItem> items = JCManager.getInstance().call.getCallItems();
             JCCallItem item = items.get(0);
             return item;
+        } else if (type == Map.class) {
+
+            JSONArray mapArray = new JSONArray(value.toString());
+            HashMap<String, String> parmMap =  new HashMap<>();
+            for (int i = 0; i < mapArray.length(); i++) {
+                JSONObject pram = new JSONObject(mapArray.get(i).toString());
+                Iterator<String> sIterator = pram.keys();
+                //假定范型内容为String,String
+                while (sIterator.hasNext()) {
+                    String key = sIterator.next();
+                    parmMap.put(key, pram.get(key).toString());
+                }
+            }
+            return parmMap;
         }
         return value;
     }
