@@ -14,7 +14,7 @@
         <EditText
             android:layout_weight="2"
             android:id="@+id/ev_address"
-            android:hint="172.16.1.15"
+            android:text="172.16.4.136"
             android:layout_width="70dp"
             android:layout_height="wrap_content" />
         <TextView
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content" />
         <EditText
             android:layout_weight="1"
-            android:hint="20006"
+            android:text="9999"
             android:id="@+id/ev_port"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

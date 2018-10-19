@@ -41,7 +41,8 @@ public class SocketService {
                     PrintStream out = new PrintStream(client.getOutputStream());
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
                     //写入
-                    writer.write("{\"type\": \"command\", \"method\": \"initialize\", \"params\": [{\"string\": \"6c06d1b0d9015e47ec144097\"}], \"return\": \"bool\"}\r\n  {\"type\":\"command\",\"module\": \"client\",\"method\": \"login\",\"params\": [{\"string\": \"423424\"},{\"string\": \"234234354\"}],\"return\":\"bool\"}\r\n");
+                   // writer.write("{\"type\": \"command\", \"method\": \"initialize\", \"params\": [{\"string\": \"6c06d1b0d9015e47ec144097\"}], \"return\": \"bool\"}\r\n  {\"type\":\"command\",\"module\": \"client\",\"method\": \"login\",\"params\": [{\"string\": \"423424\"},{\"string\": \"234234354\"}],\"return\":\"bool\"}\r\n ");
+                    writer.write("{\"type\": \"command\", \"method\": \"initialize\", \"params\": [{\"string\": \"6c06d1b0d9015e47ec144097\"}], \"return\": \"bool\"}\r\n {\"type\": \"command\", \"module\": \"mediaChannel\", \"method\": \"join\", \"params\": [{\"string\": \"test100\"}, {\"map\": [{\"password\":\"123456\"},{\"sdfs\":\"sdf\"}]}], \"return\": \"bool\"}\r\n");
                     //发送
                     writer.flush();            //缓冲流刷新
                     out.flush();
