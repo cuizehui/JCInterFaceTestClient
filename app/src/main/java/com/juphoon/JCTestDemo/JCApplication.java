@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.juphoon.JCTestDemo.JCWrapper.JCManager;
-import com.juphoon.JCTestDemo.Toos.Utils;
 
 public class JCApplication extends Application {
 
@@ -17,13 +16,6 @@ public class JCApplication extends Application {
     public void onCreate() {
         super.onCreate();
         sContext = this;
-        String processName = Utils.getCurProcessName(this);
-//        if (TextUtils.equals(processName, getPackageName())) {
-//            JCManager.getInstance().initialize(this);
-//            setupCheckForeground();
-//        }
-
-      //  initializeBugly();
     }
 
     private void setupCheckForeground() {
@@ -72,9 +64,4 @@ public class JCApplication extends Application {
         });
     }
 
-//    private void initializeBugly() {
-//        CrashReport.UserStrategy strategy = new CrashReport.UserStrategy(this);
-//        strategy.setAppVersion(Utils.getAppVersionName(this) + "." + Utils.getAppVersionCode(this));
-//        CrashReport.initCrashReport(this, "d0b1e2ba40", false, strategy);
-//    }
 }
