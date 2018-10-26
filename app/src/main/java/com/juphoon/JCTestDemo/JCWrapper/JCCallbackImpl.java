@@ -9,6 +9,7 @@ import com.juphoon.cloud.JCClientCallback;
 import com.juphoon.cloud.JCGroupCallback;
 import com.juphoon.cloud.JCGroupItem;
 import com.juphoon.cloud.JCGroupMember;
+import com.juphoon.cloud.JCMediaChannel;
 import com.juphoon.cloud.JCMediaChannelCallback;
 import com.juphoon.cloud.JCMediaChannelParticipant;
 import com.juphoon.cloud.JCMediaChannelQueryInfo;
@@ -39,8 +40,8 @@ public class JCCallbackImpl implements JCClientCallback, JCCallCallback, JCMedia
     }
 
     @Override
-    public void onCallItemUpdate(JCCallItem jcCallItem) {
-        
+    public void onCallItemUpdate(JCCallItem jcCallItem, JCCallItem.ChangeParam changeParam) {
+
     }
 
     @Override
@@ -114,7 +115,7 @@ public class JCCallbackImpl implements JCClientCallback, JCCallCallback, JCMedia
     }
 
     @Override
-    public void onMediaChannelPropertyChange() {
+    public void onMediaChannelPropertyChange(JCMediaChannel.PropChangeParam propChangeParam) {
 
     }
 
@@ -125,6 +126,11 @@ public class JCCallbackImpl implements JCClientCallback, JCCallCallback, JCMedia
 
     @Override
     public void onLeave(int i, String s) {
+
+    }
+
+    @Override
+    public void onStop(boolean b, int i) {
 
     }
 
@@ -144,7 +150,7 @@ public class JCCallbackImpl implements JCClientCallback, JCCallCallback, JCMedia
     }
 
     @Override
-    public void onParticipantUpdate(JCMediaChannelParticipant jcMediaChannelParticipant) {
+    public void onParticipantUpdate(JCMediaChannelParticipant jcMediaChannelParticipant, JCMediaChannelParticipant.ChangeParam changeParam) {
 
     }
 

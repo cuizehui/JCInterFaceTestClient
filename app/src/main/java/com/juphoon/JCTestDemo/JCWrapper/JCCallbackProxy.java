@@ -49,16 +49,25 @@ public class JCCallbackProxy implements JCCallbackProxyMethod {
             resultJson.put("type", "callback");
             resultJson.put("method", method);
             Gson gson = new Gson();
+            //序列化基本类型
             if (args != null) {
                 for (int i = 0; i < args.length; i++) {
                     Log.d("class type:", args[i].getClass().toString() + ".");
                     if (args[i].getClass() == com.juphoon.cloud.JCCallItem.class) {
+                        //强制类型转换后内部类对象为OBJ
                         JCCallItem jcCallItem = (JCCallItem) args[i];
-                        resultJson.put("arg" + i, gson.toJson(jcCallItem));
-                    }
-                    if (args[i].getClass() == JCMediaChannelParticipant.class) {
+                        String s = gson.toJson(jcCallItem, JCCallItem.class);
+                        resultJson.put("arg" + i, s);
+                    } else if (args[i].getClass() == JCMediaChannelParticipant.class) {
                         JCMediaChannelParticipant jcMediaChannelParticipant = (JCMediaChannelParticipant) args[i];
-                        resultJson.put("arg" + i, gson.toJson(jcMediaChannelParticipant));
+                        String partp = gson.toJson(jcMediaChannelParticipant);
+                        resultJson.put("arg" + i, partp);
+                    } else if (args[i].getClass() == JCMediaChannelParticipant.ChangeParam.class) {
+                        JCMediaChannelParticipant.ChangeParam jcMCPartPchangeParam = (JCMediaChannelParticipant.ChangeParam) args[i];
+                        resultJson.put("arg" + i, gson.toJson(jcMCPartPchangeParam));
+                    } else if (args[i].getClass() == JCMediaChannel.PropChangeParam.class) {
+                        JCMediaChannel.PropChangeParam propChangeParam = (JCMediaChannel.PropChangeParam) args[i];
+                        resultJson.put("arg" + i, gson.toJson(propChangeParam));
                     } else {
                         resultJson.put("arg" + i, args[i]);
                     }

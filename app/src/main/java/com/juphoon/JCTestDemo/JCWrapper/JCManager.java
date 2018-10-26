@@ -2,15 +2,16 @@ package com.juphoon.JCTestDemo.JCWrapper;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.juphoon.JCTestDemo.JCApplication;
 import com.juphoon.JCTestDemo.JCWrapper.JCData.JCGroupData;
 import com.juphoon.JCTestDemo.JCWrapper.JCData.JCMessageData;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCAccountQueryStatusEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCCallMessageEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCConfMessageEvent;
-import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCConfQueryEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCJoinEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCLoginEvent;
@@ -42,7 +43,6 @@ import com.juphoon.cloud.JCPush;
 import com.juphoon.cloud.JCStorage;
 import com.juphoon.cloud.JCStorageCallback;
 import com.juphoon.cloud.JCStorageItem;
-import com.xiaomi.mipush.sdk.MiPushClient;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -60,6 +60,7 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
     }
 
     public Boolean pstnMode = false; // 会议的Pstn落地模式
+
 
     private Context mContext;
     public JCClient client;
@@ -143,13 +144,7 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
 //        }
 
         EventBus.getDefault().post(new JCLoginEvent(result, reason));
-        if (result) {
-            switch (mPushType) {
-                case PUSH_TYPE_MI:
-                    MiPushClient.registerPush(mContext, MIPUSH_APP_ID, MIPUSH_APP_KEY);
-                    break;
-            }
-        }
+
     }
 
     @Override
@@ -158,17 +153,7 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
         //      saveLastLogined("", "");
         JCMessageData.clear();
         JCGroupData.clear();
-        switch (mPushType) {
-            case PUSH_TYPE_MI:
-                //      HMSPush.stop(mContext);
-                break;
-            case PUSH_TYPE_HMS:
-                MiPushClient.unregisterPush(mContext);
-                break;
 
-            default:
-                break;
-        }
     }
 
     @Override
@@ -189,12 +174,12 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
     }
 
     @Override
-    public void onCallItemUpdate(JCCallItem item) {
-        EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CALL_UPDATE));
-        EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CALL_UI));
-
-
+    public void onCallItemUpdate(JCCallItem jcCallItem, JCCallItem.ChangeParam changeParam) {
+        Gson gson=new Gson();
+        String ss = gson.toJson(jcCallItem);
+        Log.d("sss:",ss+".");
     }
+
 
     @Override
     public void onMessageReceive(String type, String content, JCCallItem callItem) {
@@ -207,9 +192,10 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
     }
 
     @Override
-    public void onMediaChannelPropertyChange() {
-        EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CONFERENCE_PROP_CHANGE));
+    public void onMediaChannelPropertyChange(JCMediaChannel.PropChangeParam propChangeParam) {
+
     }
+
 
     @Override
     public void onJoin(boolean result, @JCMediaChannel.MediaChannelReason int reason, String channelId) {
@@ -232,19 +218,21 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
         EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CONFERENCE_LEAVE));
     }
 
-
     @Override
-    public void onQuery(int operationId, boolean result, @JCMediaChannel.MediaChannelReason int reason, JCMediaChannelQueryInfo queryInfo) {
-        EventBus.getDefault().post(new JCConfQueryEvent(operationId, result, reason, queryInfo));
+    public void onStop(boolean b, int i) {
+
     }
 
     @Override
-    public void onParticipantJoin(JCMediaChannelParticipant participant) {
-        EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CONFERENCE_PARTP_JOIN));
-        if (pstnMode) {
-            mediaChannel.enableAudioOutput(true);
-        }
+    public void onQuery(int i, boolean b, int i1, JCMediaChannelQueryInfo jcMediaChannelQueryInfo) {
+
     }
+
+    @Override
+    public void onParticipantJoin(JCMediaChannelParticipant jcMediaChannelParticipant) {
+
+    }
+
 
     @Override
     public void onParticipantLeft(JCMediaChannelParticipant participant) {
@@ -255,9 +243,10 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
     }
 
     @Override
-    public void onParticipantUpdate(JCMediaChannelParticipant participant) {
-        EventBus.getDefault().post(new JCEvent(JCEvent.EventType.CONFERENCE_PARTP_UPDATE));
+    public void onParticipantUpdate(JCMediaChannelParticipant jcMediaChannelParticipant, JCMediaChannelParticipant.ChangeParam changeParam) {
+
     }
+
 
     @Override
     public void onMessageReceive(String type, String content, String fromUserId) {
@@ -477,6 +466,7 @@ public class JCManager implements JCClientCallback, JCCallCallback, JCMediaChann
         JCAccountQueryStatusEvent event = new JCAccountQueryStatusEvent(result, list);
         EventBus.getDefault().post(event);
     }
+
 
     private static final class JCManagerHolder {
         private static final JCManager INSTANCE = new JCManager();
