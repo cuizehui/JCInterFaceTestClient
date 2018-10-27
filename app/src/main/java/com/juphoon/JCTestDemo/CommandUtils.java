@@ -77,6 +77,8 @@ public class CommandUtils {
             pramsType = com.juphoon.cloud.JCCallItem.class;
         } else if (TextUtils.equals("map", key)) {
             pramsType = Map.class;
+        } else if (TextUtils.equals("JCMediaChannelParticipant", key)) {
+            pramsType = com.juphoon.cloud.JCMediaChannelParticipant.class;
         }
         return pramsType;
     }
@@ -90,7 +92,7 @@ public class CommandUtils {
         } else if (type == Map.class) {
 
             JSONArray mapArray = new JSONArray(value.toString());
-            HashMap<String, String> parmMap =  new HashMap<>();
+            HashMap<String, String> parmMap = new HashMap<>();
             for (int i = 0; i < mapArray.length(); i++) {
                 JSONObject pram = new JSONObject(mapArray.get(i).toString());
                 Iterator<String> sIterator = pram.keys();

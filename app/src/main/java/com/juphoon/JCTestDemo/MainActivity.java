@@ -102,7 +102,8 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe
     public void JCEvent(JCTestEvent jcEvent) {
         Message message = buildMessage(SERVICE_SEND_COMMAND, "sendData", jcEvent.testResult);
-        mWriteHandler.sendMessage(message);
+        //延时100秒防止回调比调用来的快
+        mWriteHandler.sendMessageDelayed(message,100);
     }
 
     Runnable mWorkTask = new Runnable() {
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                                         value = ReflectionUtils.refMethod2(testBean.getReturnX(), field.getType(), field.get(mJcManager), testBean.getMethod(), testBean.getParams());
                                     }
                                     //组建回执包
-                                    ResultBean resultBean = ResultBean.createResultBean(testBean.getMethod(), value);
+                                    ResultBean resultBean = ResultBean.createResultBean(testBean.getMethod(),value);
                                     String resultMessage = ResultBean.transToJson(resultBean);
                                     Message message = buildMessage(SERVICE_SEND_COMMAND, "sendData", resultMessage);
                                     mWriteHandler.sendMessage(message);

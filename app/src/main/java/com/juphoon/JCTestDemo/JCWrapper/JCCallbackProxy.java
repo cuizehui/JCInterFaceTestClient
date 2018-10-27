@@ -58,6 +58,10 @@ public class JCCallbackProxy implements JCCallbackProxyMethod {
                         JCCallItem jcCallItem = (JCCallItem) args[i];
                         String s = gson.toJson(jcCallItem, JCCallItem.class);
                         resultJson.put("arg" + i, s);
+                    } else if (args[i].getClass() == JCCallItem.ChangeParam.class) {
+                        JCCallItem.ChangeParam callChangeParam = (JCCallItem.ChangeParam) args[i];
+                        String s = gson.toJson(callChangeParam, JCCallItem.ChangeParam.class);
+                        resultJson.put("arg" + i, s);
                     } else if (args[i].getClass() == JCMediaChannelParticipant.class) {
                         JCMediaChannelParticipant jcMediaChannelParticipant = (JCMediaChannelParticipant) args[i];
                         String partp = gson.toJson(jcMediaChannelParticipant);
