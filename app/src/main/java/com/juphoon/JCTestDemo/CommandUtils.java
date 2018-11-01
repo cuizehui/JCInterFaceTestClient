@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 import com.juphoon.JCTestDemo.JCWrapper.JCManager;
 import com.juphoon.cloud.JCCallItem;
+import com.juphoon.cloud.JCMediaChannelParticipant;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -103,6 +104,15 @@ public class CommandUtils {
                 }
             }
             return parmMap;
+        } else if (type == JCMediaChannelParticipant.class) {
+            List<JCMediaChannelParticipant> partPs = JCManager.getInstance().mediaChannel.getParticipants();
+
+            JSONObject partP = new JSONObject(value.toString());
+            for (JCMediaChannelParticipant part : partPs) {
+                if(TextUtils.equals(part.getUserId(),partP.getString("userId"))){
+                    return part;
+                }
+            }
         }
         return value;
     }
