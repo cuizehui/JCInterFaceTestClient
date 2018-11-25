@@ -11,13 +11,16 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.juphoon.JCTestDemo.JCWrapper.JCEvent.JCTestEvent;
 import com.juphoon.JCTestDemo.JCWrapper.JCManager;
+import com.juphoon.JCTestDemo.Toos.Config;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -36,6 +39,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int SERVICE_CONNECT_OK = 0;
     private static final int SERVICE_SEND_COMMAND = 1;
     private static final int SERVICE_RECEIVE_COMMAND = 2;
+    private static final int SHOW_TEST_INFO = 3;
+
+    private static final String MAIN_HANDLER_MESSAGE_KEY_INFO = "info";
+    private static final String WRITE_HANDLER_MESSAGE_KEY_SEND_DATA = "send_data";
+    private static final String WORK_HANDLER_MESSAGE_KEY_RECEIVER_DATA = "ReceiveData";
+
     private EditText mETAddress;
     private EditText mETPort;
     private TextView mTestInfo;
@@ -45,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
     private Handler mWorkHandler;
     private Handler mWriteHandler;
 
+
+    private StringBuilder testInfo = new StringBuilder();
+
+    @SuppressLint("HandlerLeak")
     private Handler mMainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -54,6 +67,10 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case SERVICE_SEND_COMMAND:
                     mTestInfo.setText("发送请求" + msg.getData());
+                case SHOW_TEST_INFO:
+                    Bundle messageShowInfo = msg.getData();
+                    testInfo.append(messageShowInfo.getString(MAIN_HANDLER_MESSAGE_KEY_INFO));
+                    mTestInfo.setText(testInfo.toString());
             }
         }
     };
@@ -94,13 +111,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         mETAddress = (EditText) findViewById(R.id.ev_address);
+        mETAddress.setText(Config.getLastConnectIp(this));
         mETPort = (EditText) findViewById(R.id.ev_port);
         mTestInfo = (TextView) findViewById(R.id.tv_info);
+        mTestInfo.setMovementMethod(ScrollingMovementMethod.getInstance());
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
     }
 
     @Subscribe
     public void JCEvent(JCTestEvent jcEvent) {
-        Message message = buildMessage(SERVICE_SEND_COMMAND, "sendData", jcEvent.testResult);
+        Message message = buildMessage(SERVICE_SEND_COMMAND, WRITE_HANDLER_MESSAGE_KEY_SEND_DATA, jcEvent.testResult);
         //延时100秒防止回调比调用来的快
         mWriteHandler.sendMessageDelayed(message, 100);
     }
@@ -117,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
                     switch (msg.what) {
                         case SERVICE_RECEIVE_COMMAND:
                             Bundle messageBundle = msg.getData();
-                            String serviceData = messageBundle.getString("ReceiveData");
+                            String serviceData = messageBundle.getString(WORK_HANDLER_MESSAGE_KEY_RECEIVER_DATA);
                             //解析命令包
                             TestBean testBean = commandUtils.dealJson(serviceData);
                             try {
@@ -126,18 +148,18 @@ public class MainActivity extends AppCompatActivity {
                                     //获取App key初始化JCMannager
                                     Object value;
                                     if (TextUtils.isEmpty(testBean.getModule())) {
-                                        value = ReflectionUtils.refMethod2(testBean.getReturnX(), JCManager.class, mJcManager, testBean.getMethod(), testBean.getParams());
+                                        value = ReflectionUtils.refMethod(testBean.getReturnX(), JCManager.class, mJcManager, testBean.getMethod(), testBean.getParams());
                                     }
                                     //执行反射方法
                                     else {
                                         Field field = null;
                                         field = ReflectionUtils.refField(JCManager.class.getName(), testBean.getModule());
-                                        value = ReflectionUtils.refMethod2(testBean.getReturnX(), field.getType(), field.get(mJcManager), testBean.getMethod(), testBean.getParams());
+                                        value = ReflectionUtils.refMethod(testBean.getReturnX(), field.getType(), field.get(mJcManager), testBean.getMethod(), testBean.getParams());
                                     }
                                     //组建回执包
                                     ResultBean resultBean = ResultBean.createResultBean(testBean.getMethod(), value);
                                     String resultMessage = ResultBean.transToJson(resultBean);
-                                    Message message = buildMessage(SERVICE_SEND_COMMAND, "sendData", resultMessage);
+                                    Message message = buildMessage(SERVICE_SEND_COMMAND, WRITE_HANDLER_MESSAGE_KEY_SEND_DATA, resultMessage);
                                     mWriteHandler.sendMessage(message);
                                 } else if (TextUtils.equals(testBean.getType(), TestBean.TYPE_INFO)) {
                                     Log.d("WorkTask", "info脚本");
@@ -170,15 +192,30 @@ public class MainActivity extends AppCompatActivity {
             mTcpUtils = new TcpUtils();
             Boolean connectResult = mTcpUtils.connectService(mHost, mPort);
             if (connectResult) {
+                Config.setLastConnectIp(MainActivity.this, mHost);
                 boolean flag = true;
                 while (flag) {
                     String content = mTcpUtils.getDataFromService();
                     if (content != null) {
-                        Log.d("ReadTask: ", content.toString());
-                        Message message = buildMessage(SERVICE_RECEIVE_COMMAND, "ReceiveData", content.toString());
+                        if (TextUtils.equals(content, TcpUtils.CONNECT_READER_FAILED)) {
+                            break;
+                        }
+
+                        Message messageShowInfo = buildMessage(SHOW_TEST_INFO, MAIN_HANDLER_MESSAGE_KEY_INFO, "\r\n收到命令：" + content);
+                        mMainHandler.sendMessage(messageShowInfo);
+                        Log.d("ReadTask: ", content);
+                        Message message = buildMessage(SERVICE_RECEIVE_COMMAND, WORK_HANDLER_MESSAGE_KEY_RECEIVER_DATA, content);
                         mWorkHandler.sendMessage(message);
                         // mWorkHandler.sendMessage();
                         // mWriteTask.sendMessage();
+                    } else {
+                        if (!JCManager.getInstance().call.getCallItems().isEmpty()) {
+                            JCManager.getInstance().call.term(JCManager.getInstance().call.getCallItems().get(0), 0, "");
+                        }
+                        JCManager.getInstance().mediaChannel.leave();
+                        JCManager.getInstance().client.logout();
+                        JCManager.getInstance().uninitialize();
+                        break;
                     }
                 }
             } else {
@@ -198,8 +235,11 @@ public class MainActivity extends AppCompatActivity {
                     switch (msg.what) {
                         case SERVICE_SEND_COMMAND:
                             Bundle bundle = msg.getData();
-                            String data = bundle.getString("sendData");
-                            Log.d("WriteTask", data.toString());
+                            String data = bundle.getString(WRITE_HANDLER_MESSAGE_KEY_SEND_DATA);
+                            //显示信息
+                            Message messageShowInfo = buildMessage(SHOW_TEST_INFO, MAIN_HANDLER_MESSAGE_KEY_INFO, "\r\n发送命令: " + data);
+                            mMainHandler.sendMessage(messageShowInfo);
+                            Log.d("WriteTask", data);
                             mTcpUtils.sentData2Server(data);
                             break;
                     }
@@ -226,6 +266,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onConnect(View view) {
+        testInfo.setLength(0);
+        mTestInfo.setText(testInfo.toString());
         mHost = mETAddress.getText().toString();
         mPort = Integer.parseInt(mETPort.getText().toString());
         if (!TextUtils.isEmpty(mHost) && !TextUtils.isEmpty(mHost)) {
